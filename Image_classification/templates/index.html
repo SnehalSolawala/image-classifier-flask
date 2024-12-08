@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        img {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 24px;
+            color: green;
+        }
+        .error {
+            margin-top: 20px;
+            font-size: 24px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Upload an Image for Prediction</h1>
+
+    <form id="imageForm">
+        <input type="file" name="image" id="imageInput" accept="image/*" required><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <img id="uploadedImage" style="display:none;" src="" alt="Uploaded Image">
+
+    <div class="result" id="predictionResult"></div>
+    <div class="error" id="errorMessage"></div>
+
+    <script>
+        // Handle form submission with AJAX
+        document.getElementById('imageForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            var formData = new FormData();
+            var imageFile = document.getElementById('imageInput').files[0];
+            formData.append('image', imageFile);
+
+            // Clear previous results
+            document.getElementById('predictionResult').innerText = '';
+            document.getElementById('errorMessage').innerText = '';
+            document.getElementById('uploadedImage').style.display = 'none';
+
+            // Display the uploaded image
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('uploadedImage').style.display = 'block';
+                document.getElementById('uploadedImage').src = e.target.result;
+            };
+            reader.readAsDataURL(imageFile);
+
+            // Send the image to the server using AJAX (POST request)
+            fetch('/predict', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.prediction !== undefined) {
+                    document.getElementById('predictionResult').innerText = 'Predicted Class: ' + data.prediction;
+                } else {
+                    document.getElementById('errorMessage').innerText = 'Error: ' + data.error;
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').innerText = 'An error occurred.';
+            });
+        });
+    </script>
+
+</body>
+</html>
